@@ -22,7 +22,7 @@ class LoggingManager:
     Returns:
     - The logger associated with this module
     """
-    def __init__(self, name:str ="ExtractUniqueDomains", level:int = logging.INFO):
+    def __init__(self, name: str ="ExtractUniqueDomains", level: int = logging.INFO):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
 
@@ -36,7 +36,7 @@ class LoggingManager:
         return self.logger
 
 class ExtractUniqueDomains:
-    def __init__(self, input_file:str, output_file:Optional[TextIO]=None, threads:int=4):
+    def __init__(self, input_file: str, output_file: Optional[TextIO]=None, threads: int=4):
         self.logger = LoggingManager().get_logger()
         self.input_file = input_file
         self.output_file = output_file
@@ -60,7 +60,7 @@ class ExtractUniqueDomains:
             self.logger.info(f"Invalid file for index: {self.input_file}")
             return 0
 
-        # Open and read the input file
+        # Read the input file
         try:
             with open(self.input_file, "r") as f, ThreadPoolExecutor(self.threads) as executor:
                 futures = [executor.submit(self.process_line, line) for line in f]
@@ -70,11 +70,12 @@ class ExtractUniqueDomains:
                         unique_domains.add(result)
         except FileNotFoundError as e:
             self.logger.error(f"File Not found {self.input_file}")
+            sys.exit(1)
         except IOError as e:
             self.logger.error(f"An unexpected error happend: {e}")
+            sys.exit(1)
 
-        # Write the unique successful domains to the output file
-
+        # Write to input file
         if not self.output_file:
             return 0
 

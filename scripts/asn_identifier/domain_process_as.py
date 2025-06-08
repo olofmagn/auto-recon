@@ -69,8 +69,10 @@ class ASDataProcessor:
                 return [line.strip() for line in f if line.strip()]
         except FileNotFoundError as e:
             self.logger.info(f"File not found. Please check file_path: {self.domain_file}")
+            sys.exit(1)
         except IOError as e:
             self.logger.info(f"Unexpected error happened when reading the file")
+            sys.exit(1)
 
     def count_and_save_asns(self, asn_list_count: List[str], output_file: Optional[str]) -> int:
         """
@@ -181,6 +183,7 @@ class ASDataProcessor:
 
         except Exception as e:
             self.logger.critical(f"Critical failure in main execution: {e}")
+            sys.exit(1)
 
 class ArgumentParser:
     """

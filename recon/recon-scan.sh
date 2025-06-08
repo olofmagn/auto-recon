@@ -81,12 +81,12 @@ print_out_initalization() {
   echo "============================"
 }
 
-# Check if a path exist before creating a scope and path
+# Check if a path exist before creating a scope and path - if there is a repetitive scan.
 check_path_existence() {
-  if [ ! -d "$1" ]; then
-    echo -e "\e[31mDirectory scope and path do not exist: $1\e[0m"
-    echo -e "\e[33mCreating scope and scan path......\e[0m"
-    mkdir -p "$HOME/auto-recon/recon/scan-$target-$(date +%F)"
+  if [ ! -d "$scan_path" ]; then
+    echo -e "\e[33mCreating scan path......\e[0m"
+    mkdir -p "$scan_path"
+    return 1
     echo "============================"
     echo -e "\e[32mDirectory creation done!\e[0m"
     echo "============================"
@@ -160,32 +160,32 @@ check_if_dev_domain() {
   if [ -s "$scan_path/enumerated_devdomains.txt" ]; then
     echo -e "\e[32mDev domains found! Development domains saved to the $scan_path/enumerated_devdomains.txt\e[0m"
     cat "$scan_path/enumerated_devdomains.txt" | httpx -probe -sc -title -fhr -location -wc -sc -cl -ct -web-server -asn -o "$scan_path/httpx-out-devdomains.txt" -p 8000,8080,8443,443,80,8008,3000,5000 -t 75
-  else
-    echo "Found no dev domains...."
   fi
 }
 
 # Ensure that we use the local installed chrome for screenshot (--system-chrome)
 create_screenshot_for_every_subdomain() {
   cat "$scan_path/enumerated_allsubdomains.txt" | httpx -ss -system-chrome -fr 
-  wait
   echo -e "\e[32mScreenshots done.\e[0m"
 }
+
+# Initialize all objects
+initialize "$1" "$2" "$3"
+
+#Printout all the initialized variables
+print_out_initalization
 
 # Make sure that the user passes an argument when executing the script.
 check_correct_args_pass "$1"
 
 # Double check that scan path gets corrected created.
-check_path_existence "$scan_path"
+check_path_existence 
 
 #Check so that we are in correct path when executing the script.
 check_current_path
 
 print_welcome_banner
 sleep 2
-
-initialize "$1" "$2" "$3"
-print_out_initalization
 
 # Main program starts here!
 main() {
@@ -199,7 +199,7 @@ main() {
   print_scanner_started
 
   echo -e "\e[33mStarting enumerating subdomains using shodan\e[0m"
-  shodan domain $target | awk 'NR>2 && $1!="" { print $1 }'| sed "s/$/.$target/" > "$scan_path/enumerated_subdomains_shodan.txt"
+  shodan domain "$target" | awk 'NR>2 && $1!="" { print $1 }'| sed "s/$/.$target/" >"$scan_path/enumerated_subdomains_shodan.txt"
 
   echo -e "\e[33mStarting enumerating subdomains using subfinder.\e[0m"
   #Get all the subdomains and create screenshot
@@ -232,25 +232,21 @@ main() {
   # Enumerate all dev domains and save it in an appropriate file
   echo -e "\e[33mChecking if there are any dev domains\e[0m"
   cat "$scan_path/allsubdomains-httpx-out-filtered.txt" | grep -Ei "dev.|.\dev-portal|\.dev\|\.staging\|\.test\|\.local|internal|sandbox|org|net" >"$scan_path/enumerated_devdomains.txt"
+  check_if_dev_domain
 
   # Check for domain-takeover
   subzy run --targets "$scan_path/allsubdomains-httpx-out-filtered.txt" --vuln --output "$scan_path/domain-takeover-vuln.txt"
-
-  # Checks if dev_domain
-  check_if_dev_domain
-
-  echo -e "\e[33m Preparing to create directories and move files...\e[0m"
-
+  
+  # Create screenshot for every subdomain for visulisation
   echo -e "\e[33mCreating screenshot for every subdomain\e[0m"
-  create_screenshot_for_every_subdomain
-  echo -e "\e[32mDone with creating screenshot!\e[0m"
+  cat "$scan_path/enumerated_allsubdomains.txt" | httpx -ss -system-chrome -fr 
+  echo -e "\e[32mScreenshots done.\e[0m"
 
   echo -e "\e[33mPort-scanning inititated\e[0m"
   ip_translation_for_nmap
   echo -e "\e[32mPort-scanning done\e[0m"
 
-  # Code to structure directories/files starts here
-  echo -e "\e[33mCreating and moving directories\e[0m"
+  echo -e "\e[33m Preparing to create directories and move files...\e[0m"
 
   mkdir "$scan_path/domain-takeover"
   mv domain-takeover-vuln.txt "$scan_path/domain-takeover"
@@ -269,8 +265,7 @@ main() {
 
   mv "$scan_path/output/screenshot" "$scan_path/screenshot/"
 
- echo -e "\e[33mCreating and moving directories done\e[0m"
- echo -e "\e[33mSaving results. Please see result in respective folder for manual analysis: $scan_path/\e[0m"
+ echo -e "\e[33mDone with moving files. Please see result in respective folder for manual analysis: $scan_path/\e[0m"
 
  echo -e "\e[33mCleaning inititated\e[0m"
  find "$scan_path/" -maxdepth 1 -type f -name "*.txt" -print0 | xargs -0 rm
