@@ -81,14 +81,22 @@ class ASDataProcessor:
         if not asn_list_count:
             return 0
 
-        normalized_asns = [''.join(asn) if isinstance(asn, list) else asn for asn in asn_list_count]
+        normalized_asns = []
+       
+        # Normalize and split any grouped ASNs
+        for entry in asn_list_count:
+            if isinstance(entry, list):
+                entry = ''.join(entry)
+            normalized_asns.extend(entry.split())
+
         asn_counter = Counter(normalized_asns)
         sorted_asns = sorted(asn_counter.items(),key=lambda x: x[1], reverse=True)
 
         try:
             with open(output_file, "w") as f:
-                lines = [f"ASN: {asn} count: {count}\n" for asn, count in sorted_asns]
-                f.writelines(lines)
+                for asn, count in sorted_asns:
+                    if str(asn).lower() not in {"0", "n/a", "na"}:
+                        f.writelines(f"ASN: {asn} count: {count}\n")
                 self.logger.info(f"Results saved to {output_file}")
         except IOError as e:
             self.logger.error(f"Unexpected error happended when writing to the file: {e}")
@@ -131,10 +139,6 @@ class ASDataProcessor:
         - num_threads (int): the number of threads
         """
         as_info = self.get_as_info(domain)
-
-        if as_info == 'N/A':
-            self.logger.warning(f"Skipping domain {domain} since no valid ASN found")
-            return 0
 
         self.logger.info(f"Domain: {domain}, AS Number: {as_info}")
         return as_info

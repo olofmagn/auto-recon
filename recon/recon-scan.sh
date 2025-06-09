@@ -17,12 +17,12 @@ show_help() {
   echo "  scope               Scope name or identifier (e.g, api, full, limited)"
   echo
   echo "Options:"
-  echo "  -h, --help  Show this help message and exit"
+  echo "  -h, -help  Show this help message and exit"
 }
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+if [[ "$1" == "-h" || "$1" == "-help" ]]; then
   show_help
-  exit 0
+  return 0
 fi
 
 # Scan banner
@@ -62,7 +62,7 @@ check_correct_args_pass() {
   # Check valid program arguments
   if [ -z "$1" ]; then
     show_help
-    exit 1
+    return 1
   fi
 }
 
@@ -85,11 +85,11 @@ print_out_initalization() {
 check_path_existence() {
   if [ ! -d "$scan_path" ]; then
     echo -e "\e[33mCreating scan path......\e[0m"
-    mkdir -p "$scan_path"
+    mkdir -p "$scan_path" && echo -e "\e[32mDirectory created: $scan_path\e[0m"
+    return 0
+  else
+    echo -e "\e[34m Scan path already exist: $scan_path\e[0m"
     return 1
-    echo "============================"
-    echo -e "\e[32mDirectory creation done!\e[0m"
-    echo "============================"
   fi
 }
 
@@ -99,9 +99,10 @@ check_current_path() {
   if [ "$(pwd)" != "$required_path" ]; then
     echo -e "\e[33mMoving into the scan directory\e[0m"
     cd "$scan_path" || echo -e "\e[31mFailed to change directory to $scan_path\e[0m"
-    return 1
+    return 0
   else
     echo -e "\e[31mCould not move to the scan directory\e[0m"
+    return 1
   fi
 }
 
@@ -110,9 +111,10 @@ check_if_api_key_exist() {
   # Check if the API key file exists
   if [ -r "$API_KEY_FILE" ]; then
     API_KEY=$(cat "$API_KEY_FILE")
+    return 0
   else
     echo -e "\e[31mApi key not found. Please check path $API_KEY_FILE or your internet connection!\e[0m"
-    exit
+    return 1
   fi
 }
 
@@ -153,20 +155,18 @@ ip_translation_for_nmap() {
   # Remove the temporary file
   rm $temp_output
   nmap --privileged -sS --host-timeout 10m -p- -iL $output -oN "$scan_path/scan-result_of_IPs.txt"
- }
+  return 0
+}
 
 # Check for easier dev domain filtering
 check_if_dev_domain() {
   if [ -s "$scan_path/enumerated_devdomains.txt" ]; then
     echo -e "\e[32mDev domains found! Development domains saved to the $scan_path/enumerated_devdomains.txt\e[0m"
     cat "$scan_path/enumerated_devdomains.txt" | httpx -probe -sc -title -fhr -location -wc -sc -cl -ct -web-server -asn -o "$scan_path/httpx-out-devdomains.txt" -p 8000,8080,8443,443,80,8008,3000,5000 -t 75
+    return 0
+  else
+    return 1
   fi
-}
-
-# Ensure that we use the local installed chrome for screenshot (--system-chrome)
-create_screenshot_for_every_subdomain() {
-  cat "$scan_path/enumerated_allsubdomains.txt" | httpx -ss -system-chrome -fr 
-  echo -e "\e[32mScreenshots done.\e[0m"
 }
 
 # Initialize all objects
@@ -218,7 +218,7 @@ main() {
 
   # Enumerate ASN numbers
   echo -e "\e[33mStarting enumerating all ASN numbers for the merged domains\e[0m"
-  python3 $HOME/Projects/auto-recon/scripts/asn_identifier/domain_process_as.py -l "$scan_path/enumerated_allsubdomains.txt" -t 20 -o "$scan_path/asn_getter.txt"
+  python3 $HOME/Projects/auto-recon/scripts/asn_identifier/domain_process_as.py -l "$scan_path/enumerated_allsubdomains.txt" -t 75 -o "$scan_path/asn_getter.txt"
 
   echo -e "\e[33mChecking all domains probes for success\e[0m"
   # Fetch all the web applications listening to normal ports. Might need to add more ports as we move on
@@ -226,7 +226,7 @@ main() {
 
   # Focus only on succesful domains (-t=threading so you might need to tweak this depending on workload and CPU)
   echo -e "\e[33mFiltering data that we only got succesfull response\e[0m"
-  python3 $HOME/Projects/auto-recon/scripts/httpresponse_extractor/data_filtering.py -i "$scan_path/allsubdomains-httpx-out.txt" -t 20 -o "$scan_path/allsubdomains-httpx-out-filtered.txt"
+  python3 $HOME/Projects/auto-recon/scripts/httpresponse_extractor/data_filtering.py -i "$scan_path/allsubdomains-httpx-out.txt" -t 75 -o "$scan_path/allsubdomains-httpx-out-filtered.txt"
   cat "$scan_path/enumerated_allsubdomains.txt" | httpx -silent -o "$scan_path/allsubdomains-httpx-out.txt-filtered.txt"
 
   # Enumerate all dev domains and save it in an appropriate file
@@ -236,7 +236,7 @@ main() {
 
   # Check for domain-takeover
   subzy run --targets "$scan_path/allsubdomains-httpx-out-filtered.txt" --vuln --output "$scan_path/domain-takeover-vuln.txt"
-  
+
   # Create screenshot for every subdomain for visulisation
   echo -e "\e[33mCreating screenshot for every subdomain\e[0m"
   cat "$scan_path/enumerated_allsubdomains.txt" | httpx -ss -system-chrome -fr 
@@ -252,7 +252,7 @@ main() {
   mv domain-takeover-vuln.txt "$scan_path/domain-takeover"
 
   mkdir "$scan_path/domains/"
-  mv enumerated_subdomains* "$scan_path/domains"
+  mv enumerated_* "$scan_path/domains"
 
   mkdir "$scan_path/httpx/"
   mv *-httpx-* "$scan_path/httpx/"
@@ -265,12 +265,12 @@ main() {
 
   mv "$scan_path/output/screenshot" "$scan_path/screenshot/"
 
- echo -e "\e[33mDone with moving files. Please see result in respective folder for manual analysis: $scan_path/\e[0m"
+  echo -e "\e[33mDone with moving files. Please see result in respective folder for manual analysis: $scan_path/\e[0m"
 
- echo -e "\e[33mCleaning inititated\e[0m"
- find "$scan_path/" -maxdepth 1 -type f -name "*.txt" -print0 | xargs -0 rm
- find "$scan_path/" -maxdepth 1 -type d -name "output" -exec rm -r {} +
- echo -e "\e[32mCleaning done\e[0m"
+  echo -e "\e[33mCleaning inititated\e[0m"
+  find "$scan_path/" -maxdepth 1 -type f -name "*.txt" -print0 | xargs -0 rm
+  find "$scan_path/" -maxdepth 1 -type d -name "output" -exec rm -r {} +
+  echo -e "\e[32mCleaning done\e[0m"
 }
 main
 

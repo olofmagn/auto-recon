@@ -20,20 +20,20 @@ Another recon tool to quickly perform reconnaissance on a target in an organized
 Navigate to `recon/` and issue:
 
 ```bash
-./recon-scan 1 target.com api
+./recon-scan 1 target.com global
 ```
 
-- `1` - PentesterID (used to identify who is running the scan or in which context)
-- `target.com` - the target domain for reconnaissance
-- `api` - the scope or area of the domain to focus on (e.g., "api", "web", "admin")
+- `1` - PentesterID (used to identify who is running the scan or in which context).
+- `target.com` - the target domain for reconnaissance.
+- `global` - the scope or area of the domain to focus on (e.g., "api", "web", "admin", "global").
 
 Example output of the initialization process:
 ```bash
 Pentest ID: 1
 Target: target.com
-Scope: api
+Scope: global
 Current Path: /home/olofmagn/Projects/auto-recon
-Scope Path: /scope/test
+Scope Path: /scope/global
 Timestamp: 11:22:26
 Scan Path: /home/olofmagn/auto-recon/recon/target.com-2025-06-07
 Issuer: olofmagn
