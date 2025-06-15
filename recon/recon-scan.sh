@@ -22,7 +22,7 @@ show_help() {
 
 if [[ "$1" == "-h" || "$1" == "-help" ]]; then
   show_help
-  return 0
+  exit 
 fi
 
 # Scan banner
@@ -60,9 +60,9 @@ initialize() {
 
 check_correct_args_pass() {
   # Check valid program arguments
-  if [ -z "$1" ]; then
+  if [[ -z "$1"  ||  -z "$2" || -z "$3" ]]; then
     show_help
-    return 1
+    exit 1
   fi
 }
 
@@ -168,15 +168,14 @@ check_if_dev_domain() {
     return 1
   fi
 }
+# Make sure that the user passes an argument when executing the script.
+check_correct_args_pass "$1" "$2" "$3"
 
-# Initialize all objects
+# Initialize all necessary objects
 initialize "$1" "$2" "$3"
 
 #Printout all the initialized variables
 print_out_initalization
-
-# Make sure that the user passes an argument when executing the script.
-check_correct_args_pass "$1"
 
 # Double check that scan path gets corrected created.
 check_path_existence 
