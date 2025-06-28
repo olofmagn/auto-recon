@@ -200,18 +200,25 @@ main() {
   echo -e "\e[33mStarting enumerating subdomains using shodan\e[0m"
   shodan domain "$target" | awk 'NR>2 && $1!="" { print $1 }'| sed "s/$/.$target/" >"$scan_path/enumerated_subdomains_shodan.txt"
 
-  echo -e "\e[33mStarting enumerating subdomains using subfinder.\e[0m"
-  #Get all the subdomains and create screenshot
+  echo -e "\e[33mStarting enumerating subdomains using assetfinder\e[0m"
+  assetfinder -subs-only "$target" | tee "$scan_path/enumerated_subdomains_assetfinder.txt"
+
+  echo -e "\e[33mStarting enumerating subdomains using subfinder\e[0m"
   subfinder -all -d "$target" -o "$scan_path/enumerated_subdomains_subfinder.txt" -v
 
-  echo -e "\e[33mStarting enumerating subdomains using amass\e[0m"
-  amass enum -d "$target" -o "$scan_path/enumerated_subdomains_amass.txt" -v
+  echo -e "\e[33mStarting enumerating subdomains and intel using amass\e[0m"
+  amass enum -d "$target" -o "$scan_path/enumerated_subdomains_amass.txt" 
+  python3 $HOME/Projects/auto-recon/scripts/amass_host_extractor/amass_host_extractor.py -i "$scan_path/enumerated_subdomains_amass.txt" -o "$scan_path/enumerated_subdomains_amass_filtered.txt"
+  amass intel -d "$target" -whois -o "$scan_path/enumerated_subdomains_amassintel.txt"
+
+  # Add these two above enumerations type together
+  cat "$scan_path/enumerated_subdomains_amass_filtered.txt" "$scan_path/enumerated_subdomains_amassintel.txt" > "$scan_path/enumerated_subdomains_all_amass.txt"
 
   # Merge all the domains identified from all the tools
   echo -e "\e[33mMerging all the domains found from the tools\e[0m"
-  cat "$scan_path/enumerated_subdomains_subfinder.txt" "$scan_path/enumerated_subdomains_amass.txt" "$scan_path/enumerated_subdomains_shodan.txt" >"$scan_path/enumerated_merged_domains.txt"
+  cat "$scan_path/enumerated_subdomains_subfinder.txt" "$scan_path/enumerated_subdomains_all_amass.txt" "$scan_path/enumerated_subdomains_shodan.txt" "$scan_path/enumerated_subdomains_assetfinder" >"$scan_path/enumerated_merged_domains.txt"
 
-  # Fetch unique values and avoid duplicates
+  # Fetch unique values and avoid duplicates when all domains are correctly fetched
   cat "$scan_path/enumerated_merged_domains.txt" | uniq >"$scan_path/enumerated_allsubdomains.txt"
   echo -e "\e[32mDone with merging subdomains from all tools.\e[0m"
 
