@@ -8,13 +8,9 @@ echo -e "\e[33mUpdating package lists...\e[0m"
 apt-get update -y
 apt-get upgrade -y
 
-# Granting privileges to nmap
-setcap cap_net_raw,cap_net_admin+eip $(which nmap)
-getcap $(which nmap)
-
 # Dependency install
 echo -e "\e[33mInstalling system dependencies...\e[0m"
-apt-get install -y figlet python3-shodan nmap libpcap0.8-dev python3-pip golang-go
+apt-get install -y figlet python3-shodan libpcap0.8-dev python3-pip golang-go
 
 # Python packages
 echo -e "\e[33mInstalling Python packages...\e[0m]"
@@ -27,6 +23,7 @@ go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 go install -v github.com/owasp-amass/amass/v4/...@master
 go install github.com/tomnomnom/assetfinder@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
 
 # Printout succesful installation
 echo -e "[\e32mAll dependencies installed successfully!\e[0m"

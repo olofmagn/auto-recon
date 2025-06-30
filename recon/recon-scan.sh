@@ -131,20 +131,19 @@ initialize_api() {
   echo -e "\e[32m${tool_name^} API key initialized\e[0m"
 }
 
-# Function to correct list of IP-addresses when iterating nmap
-ip_translation_for_nmap() {
+# Function to correct list of IP-addresses when iterating naabu
+ip_translation_for_naabu() {
 
   # Define the file path
   input="$scan_path/enumerated_allsubdomains.txt"
-  output="ips_for_nmap.txt"
-  touch "temp_output_nmap.txt"
-  temp_output="temp_output_nmap.txt"
+  output="ips_for_naabu.txt"
+  touch "temp_output_naabu.txt"
+  temp_output="temp_output_naabu.txt"
 
   while IFS= read -r domain; do
-    # This will return only unique IP-addresses from the scan
+    # This will return only unique IP-addresses from the scan so we do not miss anything from the original file
     ip=$(nslookup "$domain" | awk '/^Address: / { print $2; exit }')
     echo "$ip" >>"$temp_output"
-    # diff ips_for_nmap.txt uniq_ip_addr.txt to check the diff
   done <"$input"
 
   echo $temp_output
@@ -154,8 +153,6 @@ ip_translation_for_nmap() {
   echo "Tmpfile sorted"
   # Remove the temporary file
   rm $temp_output
-  nmap --privileged -sS --host-timeout 10m -p- -iL $output -oN "$scan_path/scan-result_of_IPs.txt"
-  return 0
 }
 
 # Check for easier dev domain filtering
@@ -168,6 +165,7 @@ check_if_dev_domain() {
     return 1
   fi
 }
+
 # Make sure that the user passes an argument when executing the script.
 check_correct_args_pass "$1" "$2" "$3"
 
@@ -186,7 +184,7 @@ check_current_path
 print_welcome_banner
 sleep 2
 
-# Main program starts here!
+# ---- Main Logic ----
 main() {
 
   # Initalize API-keys
@@ -248,9 +246,9 @@ main() {
   cat "$scan_path/enumerated_allsubdomains.txt" | httpx -ss -system-chrome -fr 
   echo -e "\e[32mScreenshots done.\e[0m"
 
-  echo -e "\e[33mPort-scanning inititated\e[0m"
-  ip_translation_for_nmap
-  echo -e "\e[32mPort-scanning done\e[0m"
+  echo -e "\e[33mPort-scanning data gatherting started\e[0m"
+  ip_translation_for_naabu
+  echo -e "\e[32mPort-scanning data gathering done\e[0m"
 
   echo -e "\e[33m Preparing to create directories and move files...\e[0m"
 
@@ -265,9 +263,9 @@ main() {
 
   mkdir "$scan_path/ASN/"
   mv asn_getter.txt "$scan_path/ASN/"
-
-  mkdir "$scan_path/nmap/"
-  mv ips_for_nmap.txt scan-result_of_IPs.txt "$scan_path/nmap/"
+  
+  mkdir "$scan_path/naabu/"
+  mv ip_translation_for_naabu.txt "$scan_path/naabu/"
 
   mv "$scan_path/output/screenshot" "$scan_path/screenshot/"
 
