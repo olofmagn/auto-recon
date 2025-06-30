@@ -1,22 +1,22 @@
 # Pentesting Tool For Reconnaissance
 Another recon tool to quickly perform reconnaissance on a target in an organized fashion.
 
-## 🔍 What It Does
+##  What It Does
 - Automated installation process.
 - Pentest scope/name labeling.
 - Organised and colorized output for data processing and further explotation.
 
-## ✅ Requirements
+##  Requirements
 - Go version > 1.23
 - Tools available in `installation.sh`.
 - Dependencies as listed in `requirements.txt`.
 
-## 🛠️ Installation
+##  Installation
 - Use `install.sh` to update/upgrade current system, install necessary packages and go-installations.
 - Use `pip3 -r requirements.txt` if you want to install the packages independently and not via the shellscript.
 - Place your API keys in textformat in `~/Projects/auto-recon/api_keys/` for correct initialization.
 
-## 📦 Usage
+##  Usage
 Navigate to `recon/` and issue:
 
 ```bash
@@ -54,5 +54,8 @@ ls -l /home/olofmagn/auto-recon/recon/target.com-2025-06-07/
 
 These folders can be navigated to investigate files for further testing with other frameworks/tools.
 
-## 📝 License
+##  Notes
+Portscanning logic is now seperated because due to its consuming nature and is located in the same directory under the name `portscan.sh`.
+
+##  License
 This project is open-source and licensed under the MIT License. See the LICENSE file for details.
