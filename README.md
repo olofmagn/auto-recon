@@ -23,9 +23,9 @@ Navigate to `recon/` and issue:
 ./recon-scan 1 target.com global
 ```
 
-- `1` - PentesterID (used to identify who is running the scan or in which context).
+- `1` - PentesterID (can be used to identify who is running the scan or in which context it is running).
 - `target.com` - the target domain for reconnaissance.
-- `global` - the scope or area of the domain to focus on (e.g., "api", "web", "admin", "global").
+- `global` - the scope or area of the domain to focus on (e.g., `api`, `web`, `admin`, `global`) for a more structured approach.
 
 Example output of the initialization process:
 ```bash
@@ -48,11 +48,11 @@ ls -l /home/olofmagn/auto-recon/recon/target.com-2025-06-07/
 -drwxrwxr-x   2 olofmagn olofmagn  4096 Jun  7 21:41 domains
 -drwxrwxr-x   2 olofmagn olofmagn  4096 Jun  7 21:41 domain-takeover
 -drwxrwxr-x   2 olofmagn olofmagn  4096 Jun  7 21:41 httpx
--drwxrwxr-x   2 olofmagn olofmagn  4096 Jun  7 21:41 nmap
+-drwxrwxr-x   2 olofmagn olofmagn  4096 Jun  7 21:41 naabu
 -drwxrwxr-x 637 olofmagn olofmagn 36864 Jun  7 20:44 screenshot
 ```
 
 These folders can be navigated to investigate files for further testing with other frameworks/tools.
 
-## License
+## 📝 License
 This project is open-source and licensed under the MIT License. See the LICENSE file for details.
