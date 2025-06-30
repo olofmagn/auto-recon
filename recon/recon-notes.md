@@ -51,3 +51,4 @@
 - [ ] Document findings carefully and validate any vulnerabilities before reporting
 - [ ] Use proper discretion when handling sensitive data such as API keys or credentials
 
+
