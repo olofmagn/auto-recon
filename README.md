@@ -16,6 +16,29 @@ Another recon tool to quickly perform reconnaissance on a target in an organized
 - Use `pip3 -r requirements.txt` if you want to install the packages independently and not via the shellscript.
 - Place your API keys in textformat in `~/Projects/auto-recon/api_keys/` for correct initialization.
 
+## File structure
+```
+.
+├── api_keys
+│   ├── httpx.txt
+│   └── shodan.txt
+├── install.sh
+├── LICENSE
+├── README.md
+├── recon
+│   ├── portscan.sh
+│   ├── recon-notes.md
+│   └── recon-scan.sh
+├── requirements.txt
+└── scripts
+    ├── amass_host_extractor
+    │   └── amass_host_extractor.py
+    ├── asn_identifier
+    │   └── domain_process_as.py
+    └── httpresponse_extractor
+        └── data_filtering.py
+```
+
 ##  Usage
 Navigate to `recon/` and issue:
 
