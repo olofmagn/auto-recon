@@ -19,16 +19,16 @@ ip_translation_for_naabu() {
   input="$1"
   output="ips_for_naabu.txt"
   temp_output="temp_output_naabu.txt"
+  httpx_data="ips_httpx.txt"
 
   if [ ! -f "$input" ]; then
     echo -e "\e[31mFile not found: $input\e[0m"
     show_help
-    exit 0
+    exit 1
   fi
 
   echo -e "\e[33mTranslating domains to IPs\e[0m"
-
-  > "$temp_output"  # Clear file before appending
+  > "$temp_output"
   while IFS= read -r domain; do
     ip=$(nslookup "$domain" | awk '/^Address: / { print $2; exit }')
     [ -n "$ip" ] && echo "$ip" >> "$temp_output"
@@ -36,28 +36,30 @@ ip_translation_for_naabu() {
 
   sort -u "$temp_output" > "$output"
   echo -e "\e[32mOutput written to: $output\e[0m"
-
   rm -f "$temp_output"
 }
 
 # Run only httpx directly on resolved IPs
 run_httpx_direct() {
   scan_input="ips_for_naabu.txt"
+  httpx_data="ips_httpx.txt"
   if [ ! -s "$scan_input" ]; then
     echo -e "\e[31mNo IPs found in $scan_input, skipping httpx.\e[0m"
-    exit 0
+    exit 1
   fi
 
-  echo -e "\e[33mRunning httpx directly on IPs since no arguments...\e[0m"
-  httpx -silent -l "$scan_input" -title | tee http_ips.txt
+  echo -e "\e[33mRunning httpx directly on IPs...\e[0m"
+  httpx -silent -l "$scan_input" -title | tee "$httpx_data"
 }
 
 # Run naabu and then httpx
 run_naabu_func() {
   scan_input="ips_for_naabu.txt"
+  httpx_data="ips_httpx.txt"
+
   if [ ! -s "$scan_input" ]; then
     echo -e "\e[31mNo IPs found in $scan_input, skipping naabu.\e[0m"
-    exit 0
+    exit 1
   fi
 
   echo -e "\e[33mRunning naabu...\e[0m"
@@ -65,29 +67,31 @@ run_naabu_func() {
 
   if [ -s scan-result_of_IPs.txt ]; then
     echo -e "\e[33mRunning httpx on naabu results...\e[0m"
-    httpx -silent -l scan-result_of_IPs.txt -title -o httpx_naabu.txt
+    httpx -silent -l scan-result_of_IPs.txt -title -o "$httpx_data"
   else
     echo -e "\e[33mNo open ports found. Running httpx on original IPs...\e[0m"
-    httpx -silent -l "$scan_input" -title -o http_ips.txt
+    httpx -silent -l "$scan_input" -title -o "$httpx_data"
   fi
 }
 
-# ---- Main Logic ----
+# Main Logic
 main() {
   if [[ "$1" == "-h" || "$1" == "--help" || -z "$1" ]]; then
     show_help
-    exit 0
+    exit 1
   fi
 
   echo -e "\e[33mStarting the ip_translation process\e[0m"
   ip_translation_for_naabu "$1"
 
   shift
-  if [[ "$1" == "--naabu" ]]; then
+  if [[ "$1" == "--naabu" || "$1" == "-n" ]]; then
     run_naabu_func
   else
     run_httpx_direct
   fi
+
+  echo -e "\e[32mScanning done!\e[0m"
 }
 
 main "$@"

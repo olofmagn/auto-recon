@@ -9,7 +9,7 @@ A tool that automate the reconnaissance process and format data in a organizeed 
 '
 
 show_help() {
-cat << EOF
+  cat << EOF
 Usage: $0 <pentesterid> <target> <scope>"
 
 Arguments:
@@ -23,16 +23,16 @@ EOF
 }
 
 # To provide fast help utility to the user
-if [[ $# -eq 0 || "$1" =~ ^-h|--help$ || -z "$1" ]]; then
+if [[ "$1" == -h || "$1" == --help ]]; then
   show_help
-  exit 0
+  exit 1
 fi
 
+# Check valid passed arguments
 check_correct_args_pass() {
-  # Check valid program arguments
   if [[ -z "$1"  ||  -z "$2" || -z "$3" ]]; then
     show_help
-    exit 0
+    exit 1
   fi
 }
 
@@ -79,7 +79,7 @@ initialize() {
 }
 
 print_out_initalization() {
-cat << EOF
+  cat << EOF
 Pentest ID: $id
 Target: $target
 Scope: $scope
