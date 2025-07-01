@@ -7,8 +7,8 @@ Another recon tool to quickly perform reconnaissance on a target in an organized
 - Organised and colorized output for data processing and further explotation.
 
 ##  Requirements
-- Go version > 1.23
-- Tools available in `installation.sh`.
+- Go version > 1.23.
+- Tools/python packages available in `installation.sh`.
 - Dependencies as listed in `requirements.txt`.
 
 ##  Installation
@@ -55,7 +55,8 @@ ls -l /home/olofmagn/auto-recon/recon/target.com-2025-06-07/
 These folders can be navigated to investigate files for further testing with other frameworks/tools.
 
 ##  Notes
-Portscanning logic is now seperated because due to its consuming nature and is located in the same directory under the name `portscan.sh`.
+- Portscanning logic is now seperated because due to its consuming nature and is located in the same directory under the name `portscan.sh`.
+- If you are interested in a quicker recon process, check out https://github.com/olofmagn/fast-recon.
 
 ##  License
 This project is open-source and licensed under the MIT License. See the LICENSE file for details.
