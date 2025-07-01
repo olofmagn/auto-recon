@@ -2,14 +2,16 @@
 
 # Help menu
 show_help() {
-  echo "Usage: $0 <file_path> [--naabu]"
-  echo
-  echo "Arguments:"
-  echo "  file_path      Path to the subdomain list to resolve IPs"
-  echo
-  echo "Options:"
-  echo "  -h, --help     Show this help message and exit"
-  echo "  --naabu        Run naabu + httpx after translating domains"
+  cat <<EOF
+Usage: $0 <file_path> [--naabu]
+
+Arguments:
+  file_path      Path to the subdomain list to resolve IPs
+
+Options:
+  -h, --help     Show this help message and exit
+  -n, --naabu        Run naabu + httpx after translating domains
+EOF
 }
 
 # Translate domains to unique IPs
