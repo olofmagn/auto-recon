@@ -62,7 +62,7 @@ class ExtractUniqueDomains:
 
         # Read the input file
         try:
-            with open(self.input_file, "r") as f, ThreadPoolExecutor(self.threads) as executor:
+            with open(self.input_file, "r", encoding='utf-8') as f, ThreadPoolExecutor(self.threads) as executor:
                 futures = [executor.submit(self.process_line, line) for line in f]
                 for future in as_completed(futures):
                     result = future.result()
@@ -80,7 +80,7 @@ class ExtractUniqueDomains:
             return 0
 
         try:
-            with open(self.output_file, "w") as f:
+            with open(self.output_file, "w", encoding='utf-8') as f:
                 for domain in sorted(unique_domains):  # Sorting for consistency
                     f.write(domain + "\n")
                 if not self.output_file:

@@ -124,7 +124,7 @@ class HostExtractor:
 
         output = self.get_host()
         if self.output_path:
-            with open(self.output_path, "w") as f:
+            with open(self.output_path, "w", encoding='utf-8') as f:
                 f.writelines(item + "\n" for item in output)
             self.logger.info(f"Output written to: {self.output_path}")
         else:

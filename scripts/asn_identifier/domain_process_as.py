@@ -65,7 +65,7 @@ class ASDataProcessor:
         Helper method that loads a file to iterate domains
         """
         try:
-            with open(self.domain_file, "r") as f:
+            with open(self.domain_file, "r", encoding='utf-8') as f:
                 return [line.strip() for line in f if line.strip()]
         except FileNotFoundError as e:
             self.logger.info(f"File not found. Please check file_path: {self.domain_file}")
@@ -93,7 +93,7 @@ class ASDataProcessor:
         sorted_asns = sorted(asn_counter.items(),key=lambda x: x[1], reverse=True)
 
         try:
-            with open(output_file, "w") as f:
+            with open(output_file, "w", encoding='utf-8') as f:
                 for asn, count in sorted_asns:
                     if str(asn).lower() not in {"0", "n/a", "na"}:
                         f.writelines(f"ASN: {asn} count: {count}\n")
