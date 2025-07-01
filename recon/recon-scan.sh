@@ -9,39 +9,59 @@ A tool that automate the reconnaissance process and format data in a organizeed 
 '
 
 show_help() {
-  echo "Usage: $0 <pentesterid> <target> <scope>"
-  echo
-  echo "Arguments:"
-  echo "  pentester_id        Numeric or string ID to identify who is running the scan "1""
-  echo "  target              The domain name to scan (e.g., example.com)"
-  echo "  scope               Scope name or identifier (e.g, api, full, limited)"
-  echo
-  echo "Options:"
-  echo "  -h, -help  Show this help message and exit"
+  cat << EOF
+Usage: $0 <pentesterid> <target> <scope>"
+
+Arguments:
+  pentester_id        Numeric or string ID to identify who is running the scan
+  target              The domain name to scan (e.g., example.com)" 
+  scope               Scope name or identifier (e.g, api, full, limited)"
+
+Options:
+  -h, --help  Show this help message and exit
+EOF
 }
 
-if [[ "$1" == "-h" || "$1" == "-help" ]]; then
+# To provide fast help utility to the user
+if [[ "$1" == -h || "$1" == --help ]]; then
   show_help
-  exit 
+  exit 1
 fi
+
+# Check valid passed arguments
+check_correct_args_pass() {
+  if [[ -z "$1"  ||  -z "$2" || -z "$3" ]]; then
+    show_help
+    exit 1
+  fi
+}
+
+print_figlet() {
+    message="$1"
+    if command -v figlet > /dev/null 2>&1; then
+        figlet "$message"
+    else
+        echo "==== $message ===="
+    fi
+}
 
 # Scan banner
 print_welcome_banner() {
-  figlet "Program initiated" 
+  print_figlet "Program initiated"
   echo "============================"
   echo "Starting the program..."
   echo "============================"
 }
 
 print_scanner_initiated() {
-  figlet "Scan Initiated."
+  print_figlet "Scanning initiated"
   echo "============================"
   echo -e "\e[33mLoading API-keys...\e[0m"
   echo "============================"
 }
 
 print_scanner_started() {
-  figlet "Scan started."
+  print_figlet "Scanning started"
   echo "============================"
   echo -e "\e[33mStarting the scan process...\e[0m"
   echo "============================"
@@ -58,27 +78,17 @@ initialize() {
   scan_path="$HOME/auto-recon/recon/scan-$target-$(date +%F)"
 }
 
-check_correct_args_pass() {
-  # Check valid program arguments
-  if [[ -z "$1"  ||  -z "$2" || -z "$3" ]]; then
-    show_help
-    exit 1
-  fi
-}
-
 print_out_initalization() {
-  # Just to printout that we get correct path, scope, timestamp etc after initialization for the initiator
-  echo "Pentest ID: $id"
-  echo "Target: $target"
-  echo "Scope: $scope"
-  echo "Current Path: $ppath"
-  echo "Scope Path: $scope_path"
-  echo "Timestamp: $timestamp"
-  echo "Scan Path: $scan_path"
-  echo "Issuer: $USER"
-  echo "============================"
-  figlet "Done with initalization"
-  echo "============================"
+  cat << EOF
+Pentest ID: $id
+Target: $target
+Scope: $scope
+Current Path: $ppath
+Scope Path: $scope_path
+Timestamp: $timestamp
+Scan Path: $scan_path
+Issuer: $USER
+EOF
 }
 
 # Check if a path exist before creating a scope and path - if there is a repetitive scan.
@@ -241,33 +251,33 @@ main() {
   # Check for domain-takeover
   subzy run --targets "$scan_path/allsubdomains-httpx-out-filtered.txt" --vuln --output "$scan_path/domain-takeover-vuln.txt"
 
-  # Create screenshot for every subdomain for visulisation
+  # Create screenshot for every subdomain for visualisation
   echo -e "\e[33mCreating screenshot for every subdomain\e[0m"
   cat "$scan_path/enumerated_allsubdomains.txt" | httpx -ss -system-chrome -fr 
   echo -e "\e[32mScreenshots done.\e[0m"
 
-  echo -e "\e[33mPort-scanning data gatherting started\e[0m"
+  echo -e "\e[33mPort-scanning data gathering started\e[0m"
   ip_translation_for_naabu
   echo -e "\e[32mPort-scanning data gathering done\e[0m"
 
   echo -e "\e[33m Preparing to create directories and move files...\e[0m"
 
   mkdir "$scan_path/domain-takeover"
-  mv domain-takeover-vuln.txt "$scan_path/domain-takeover"
+  mv -f domain-takeover-vuln.txt "$scan_path/domain-takeover" 2>/dev/null || true
 
   mkdir "$scan_path/domains/"
-  mv enumerated_* "$scan_path/domains"
+  mv -f enumerated_* "$scan_path/domains" 2>/dev/null || true
 
   mkdir "$scan_path/httpx/"
-  mv *-httpx-* "$scan_path/httpx/"
+  mv -f *-httpx-* "$scan_path/httpx/" 2>/dev/null || true
 
   mkdir "$scan_path/ASN/"
-  mv asn_getter.txt "$scan_path/ASN/"
+  mv -f asn_getter.txt "$scan_path/ASN/" 2>/dev/null || true
   
   mkdir "$scan_path/naabu/"
-  mv ip_translation_for_naabu.txt "$scan_path/naabu/"
+  mv -f ips_for_naabu.txt "$scan_path/naabu/" 2>/dev/null || true
 
-  mv "$scan_path/output/screenshot" "$scan_path/screenshot/"
+  mv -f "$scan_path/output/screenshot" "$scan_path/screenshot/" 2>/dev/null || true
 
   echo -e "\e[33mDone with moving files. Please see result in respective folder for manual analysis: $scan_path/\e[0m"
 
