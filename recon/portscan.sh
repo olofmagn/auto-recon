@@ -9,7 +9,7 @@ Arguments:
   file_path      Path to the subdomain list to resolve IPs
 
 Options:
-  -h, --help     Show this help message and exit
+  -h, --help         Show this help message and exit
   -n, --naabu        Run naabu + httpx after translating domains
 EOF
 }
