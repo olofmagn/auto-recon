@@ -25,7 +25,8 @@ class LoggingManager:
     Returns:
     - The logger associated with this module
     """
-    def __init__(self, name: str ="ASNIdentifier", level: int = logging.INFO):
+
+    def __init__(self, name: str ="ASNIdentifier", level: int = logging.INFO) -> None:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
 
@@ -35,49 +36,56 @@ class LoggingManager:
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
 
-    def get_logger(self):
+    def get_logger(self) -> logging.Logger:
         return self.logger
 
 class ASDataProcessor:
-    def __init__(self, domain:str=None, domain_file: Optional[str]=None, output_file: Optional[str]=None, asn_list: str=None, threads: int=4, retries: int=4):
+    def __init__(self, domain: str = None, input_file: Optional[str] = None, output_file: Optional[str] = None, asn_list: str = None, threads: int = 4, retries: int = 4) -> None:
         """
         Initialize all objects for reading, writing and domain iteration
 
         Args:
         - domain (str): domains to process
-        - domain_file (str): domain file to process
-        - output_file (str): output file to write
-        - asn_list (list[str]) list of asns
+        - input_file (str): input file to process
+        - output_file (Optional[str]): output file to write
+        - asn_list (List[str]) list of asns
         - threads (int): number of threads
         - retries (int): number of tries before assigning N/A to the domain
         - logger (obj): logger object
         """
+
         self.domain = domain
-        self.domain_file= domain_file
+        self.input_file= input_file
         self.output_file = output_file
         self.asn_list = asn_list
         self.threads = threads
         self.retries = retries
         self.logger = LoggingManager().get_logger()
 
-    def load_domains_from_a_file(self) -> int:
+    def _load_domains_from_a_file(self) -> str:
         """
         Helper method that loads a file to iterate domains
         """
+
         try:
-            with open(self.domain_file, "r", encoding='utf-8') as f:
+            with open(self.input_file, "r", encoding='utf-8') as f:
                 return [line.strip() for line in f if line.strip()]
         except FileNotFoundError as e:
-            self.logger.info(f"File not found. Please check file_path: {self.domain_file}")
+            self.logger.info(f"File not found. Please check file_path: {self.input_file}")
             sys.exit(1)
         except IOError as e:
             self.logger.info(f"Unexpected error happened when reading the file")
             sys.exit(1)
 
-    def count_and_save_asns(self, asn_list_count: List[str], output_file: Optional[str]) -> int:
+    def _count_and_save_asns(self, asn_list_count: List[str], output_file: Optional[str]) -> str:
         """
         Count and save the asns in a output_file specified by the user
+
+        Args:
+        - asn_list_count (List[str]): list of asn_count
+        - output_file (Optional[str]): output_file specified optional by the user
         """
+
         if not asn_list_count:
             return 0
 
@@ -101,7 +109,7 @@ class ASDataProcessor:
         except IOError as e:
             self.logger.error(f"Unexpected error happended when writing to the file: {e}")
 
-    def get_as_info(self, domain) -> str:
+    def _get_as_info(self, domain: str) -> str:
         """
          Fetch information about the ASN and associated information
 
@@ -111,13 +119,13 @@ class ASDataProcessor:
          Return:
          - asn (List[str]): the asn of the domain
          """
+
         attempt = 0
         while attempt < self.retries:
             try:
-                # IPWhois requries an initial IP-address for lookup
                 ip_address = socket.gethostbyname(domain)
                 obj = IPWhois(ip_address)
-                # Retrieving and parsing whois information for an IP-address via HTTP
+                # Parse whois information
                 as_info = obj.lookup_rdap()
                 asn = as_info.get('asn')
                 return asn
@@ -130,38 +138,40 @@ class ASDataProcessor:
             self.logger.info(f"Retrying domain {domain}, attempt {attempt}/{self.retries}")
         return 'N/A'
 
-    def process_domain(self, domain:str) -> str:
+    def _process_domain(self, domain: str) -> str:
         """
         Processes a single domain and return AS information.
 
         Args:
         - domain (str): domain to process
-        - num_threads (int): the number of threads
         """
-        as_info = self.get_as_info(domain)
+
+        as_info = self._get_as_info(domain)
 
         self.logger.info(f"Domain: {domain}, AS Number: {as_info}")
         return as_info
 
-    def process_domains(self, domains:List[str]) -> List[str]:
+    def _process_domains(self, domains: List[str]) -> List[str]:
         """
         Processes a list of domains and retrieves the AS number for each.
         Uses multi-threading to speed up the process. Skips domains with 'N/A' ASNs.
 
         Args:
-        - domains (List[str]): A list of domains
+        - domains (List[str]): A list of domains.
 
         Returns:
-        - ans_list (List[str]): A list of asns of the domains in the list
+        - ans_list (List[str]): A list of asns of the domains in the list.
         """
+
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
-            futures = {executor.submit(self.process_domain, domain): domain for domain in domains}
+            futures = {executor.submit(self._process_domain, domain): domain for domain in domains}
             self.asn_list = []
+
             for future in as_completed(futures):
                 domain = futures[future]
+
                 try:
                     asn = future.result()
-                    # Make sure that we only get unique values
                     if asn is not None:
                         self.asn_list.append(str(asn))
                 except Exception as e:
@@ -169,21 +179,22 @@ class ASDataProcessor:
 
             return self.asn_list
 
-    def execute(self):
+    def execute(self) -> None:
         """
-        Execute logic based on file or string arguments from the user
+        Execute logic based on file or string arguments from the user.
         """
+
         results = []
         try:
             if self.domain:
-                results.append(self.process_domain(self.domain))
+                results.append(self._process_domain(self.domain))
 
-            if self.domain_file:
-                file_domains = self.load_domains_from_a_file()
-                results.extend(self.process_domains(file_domains))
+            if self.input_file:
+                file_domains = self._load_domains_from_a_file()
+                results.extend(self._process_domains(file_domains))
 
             if self.output_file and results:
-                self.count_and_save_asns(results, self.output_file)
+                self._count_and_save_asns(results, self.output_file)
 
         except Exception as e:
             self.logger.critical(f"Critical failure in main execution: {e}")
@@ -191,17 +202,19 @@ class ASDataProcessor:
 
 class ArgumentParser:
     """
-    Handles argument parsing
+    Handles argument parsing.
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.parser = self.create_parser()
 
     def create_parser(self) -> argparse.ArgumentParser:
         """
-        Configures the argument parser with expected arguments
+        Configures the argument parser with expected arguments.
 
-        Returns: An instance of argparse.ArgumentParser
+        Returns: An instance of argparse.ArgumentParser.
         """
+
         parser = argparse.ArgumentParser(
                 description="Process domain data and/or a file list to identify AS numbers.",
                 formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -242,10 +255,11 @@ class ArgumentParser:
         return self.parser.parse_args()
 
 class AsnApp:
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize the application, including argument parsing and searcher
+        Initialize the application, including argument parsing and searcher.
         """
+
         parser = ArgumentParser()
         self.args = parser.parse_args()
         
@@ -253,18 +267,20 @@ class AsnApp:
             print("Please use a string -d or -l for file domain iteration. Use -h to see available options")
             sys.exit(1)
 
-        self.iterator = ASDataProcessor(domain=self.args.domain, domain_file=self.args.list,output_file=self.args.output,asn_list=None,threads=self.args.threads,retries=3)
+        self.iterator = ASDataProcessor(domain=self.args.domain, input_file=self.args.list,output_file=self.args.output,asn_list=None,threads=self.args.threads,retries=3)
 
-    def run(self):
+    def run(self) -> None:
         """
-        Runs the main application
+        Runs the main application.
         """
+
         self.iterator.execute()
 
 def main():
     """
-    The entry point of the application
+    The entry point of the application.
     """
+
     try:
         app = AsnApp()
         app.run()
