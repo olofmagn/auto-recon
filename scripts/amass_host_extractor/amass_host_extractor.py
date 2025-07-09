@@ -18,7 +18,6 @@ BANNER = r"""
 
 """
 
-
 class LoggingManager:
     """
     Initialize the logger instance
@@ -26,7 +25,8 @@ class LoggingManager:
     Returns:
     - The logger associated with this module
     """
-    def __init__(self, name: str ="HostExtractor", level: int = logging.INFO):
+
+    def __init__(self, name: str ="HostExtractor", level: int = logging.INFO) -> None:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
 
@@ -40,9 +40,17 @@ class LoggingManager:
         return self.logger
 
 class HostExtractor:
-    def __init__(self, input_path, output_path = None) -> None:
-        self.input_path = input_path
-        self.output_path = output_path
+    def __init__(self, input_file: str, output_file: str = None) -> None:
+        """
+        Initialize the HostExtractor object.
+
+        Args:
+        - input_file (str): input file to process
+        - output_file (str): output file to write.
+        """
+
+        self.input_file = input_file
+        self.output_file = output_file
         self.raw_text = ""
         self.cleaned_text = ""
         self.hosts = set()
@@ -50,16 +58,34 @@ class HostExtractor:
 
     def _load_file(self) -> None:
         """
-        Loads an file from input stream
+        Loads an file from input stream.
         """
 
         try:
-            with open(self.input_path, 'r', encoding='utf-8') as file:
+            with open(self.input_file, 'r', encoding='utf-8') as file:
                 self.raw_text = file.read()
         except FileNotFoundError:
-            self.logger.error(f"File not found: {self.input_path}. Check if you provided the correct path")
+            self.logger.error(f"File not found: {self.input_file}. Check if you provided the correct path")
         except IOError:
-            self.logger.error(f"I/O Error occured when reading {self.file_path}. Exiting")
+            self.logger.error(f"I/O Error occured when reading {self.input_file}. Exiting")
+
+    def _write_output(self) -> None:
+        """
+        Writes output to a file or console.
+        """
+
+        output = self._get_host()
+        count = len(output)
+
+        if self.output_file:
+            with open(self.output_file, "w", encoding='utf-8') as f:
+                f.writelines(item + "\n" for item in output)
+            self.logger.info(f"Found {count} hosts written to: {self.output_file}")
+        else:
+            for item in output:
+                self.logger.info(item)
+            self.logger.info(f"Found {count} hosts for {self.input_file}")
+
 
     def _remove_ansi_codes(self) -> None:
         """
@@ -115,20 +141,6 @@ class HostExtractor:
 
         return sorted(self.hosts)
 
-    def _write_output(self) -> None:
-        """
-        Writes output to a file for further iteration
-        """
-
-        output = self._get_host()
-        if self.output_path:
-            with open(self.output_path, "w", encoding='utf-8') as f:
-                f.writelines(item + "\n" for item in output)
-            self.logger.info(f"Output written to: {self.output_path}")
-        else:
-            for item in output:
-                self.logger.info(item)
-
     def run(self) -> None:
         """
         Main runner
@@ -144,7 +156,7 @@ class ArgumentParser:
     Handles argument parsing
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.parser = self.create_parser()
 
     def create_parser(self) -> argparse.ArgumentParser:
@@ -181,7 +193,7 @@ class ArgumentParser:
 
 
 class ExtractHostApp:
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the app, including argument parsing and searcher
         """
@@ -189,9 +201,9 @@ class ExtractHostApp:
         parser = ArgumentParser()
         args = parser.parse_args()
 
-        self.searcher = HostExtractor(input_path=args.input, output_path=args.output)
+        self.searcher = HostExtractor(input_file=args.input, output_file=args.output)
 
-    def run(self):
+    def run(self) -> None:
         """
         Runs the main application
         """
