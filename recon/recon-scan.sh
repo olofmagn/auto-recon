@@ -205,6 +205,9 @@ main() {
   echo -e "\e[32mInitalization done. Starting the scan\e[0m"
   print_scanner_started
 
+  echo -e "\e[33mStarting enumerating subdomains using CRT.sh\e[0m"
+  curl -s "https://crt.sh?q=$target&output=json" | jq -r '.[].name_value' | awk -F '.' '{print $(NF-2)"."$(NF-1)"."$NF}' > "$scan_path/enumerated_subdomains_crt.txt"
+
   echo -e "\e[33mStarting enumerating subdomains using shodan\e[0m"
   shodan domain "$target" | awk 'NR>2 && $1!="" { print $1 }'| sed "s/$/.$target/" >"$scan_path/enumerated_subdomains_shodan.txt"
 
@@ -224,7 +227,7 @@ main() {
 
   # Merge all the domains identified from all the tools
   echo -e "\e[33mMerging all the domains found from the tools\e[0m"
-  cat "$scan_path/enumerated_subdomains_subfinder.txt" "$scan_path/enumerated_subdomains_all_amass.txt" "$scan_path/enumerated_subdomains_shodan.txt" "$scan_path/enumerated_subdomains_assetfinder" >"$scan_path/enumerated_merged_domains.txt"
+  cat "$scan_path/enumerated_subdomains_crt.txt" "$scan_path/enumerated_subdomains_subfinder.txt" "$scan_path/enumerated_subdomains_all_amass.txt" "$scan_path/enumerated_subdomains_shodan.txt" "$scan_path/enumerated_subdomains_assetfinder" >"$scan_path/enumerated_merged_domains.txt"
 
   # Fetch unique values and avoid duplicates when all domains are correctly fetched
   cat "$scan_path/enumerated_merged_domains.txt" | uniq >"$scan_path/enumerated_allsubdomains.txt"
