@@ -25,6 +25,7 @@ go install -v github.com/owasp-amass/amass/v4/...@master
 go install -v github.com/tomnomnom/assetfinder@latest
 go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
 go install -v github.com/gwen001/github-subdomains@latest
+go install -v github.com/projectdiscovery/katana/cmd/katana@latest
 
 # Printout succesful installation
 echo -e "[\e32mAll dependencies installed successfully!\e[0m"
