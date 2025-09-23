@@ -24,6 +24,7 @@ go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 go install -v github.com/owasp-amass/amass/v4/...@master
 go install github.com/tomnomnom/assetfinder@latest
 go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/gwen001/github-subdomains@latest
 
 # Printout succesful installation
 echo -e "[\e32mAll dependencies installed successfully!\e[0m"
