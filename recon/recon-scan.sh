@@ -261,6 +261,11 @@ fi
   cat "$scan_path/allsubdomains-httpx-out-filtered.txt" | grep -Ei "dev.|.\dev-portal|\.dev\|\.staging\|\.test\|\.local|internal|sandbox|org|net" >"$scan_path/enumerated_devdomains.txt"
   check_if_dev_domain
 
+  # URL crawler to fetch javascript files for httpx filtered domains
+  cat "$scan_path/allsubdomains-httpx-out.txt-filtered.txt" | katana -d 5 -jc | grep -E "\.js$" | tee alljs.txt
+  # TODO make it prettier output
+  cat alljs.txt | grep -E "\.js$" | httpx -mc 200 -content-type | grep -E "application/javascript|text/javascript" | cut -d' ' -f1 | xargs -I% curl -s % | grep -Ei "(api_key|apikey|secret|token|password)" > resultsjs.txt
+
   # Check for domain-takeover
   subzy run --targets "$scan_path/allsubdomains-httpx-out-filtered.txt" --vuln --output "$scan_path/domain-takeover-vuln.txt"
 
@@ -286,13 +291,16 @@ fi
 
   mkdir "$scan_path/ASN/"
   mv -f asn_getter.txt "$scan_path/ASN/" 2>/dev/null || true
+
+  mkdir "$scan_path/js"
+  mv -f alljs.txt resultsjs.txt "$scan_path/js" 2> /dev/null || true
   
   mkdir "$scan_path/naabu/"
   mv -f ips_for_naabu.txt "$scan_path/naabu/" 2>/dev/null || true
 
   mv -f "$scan_path/output/screenshot" "$scan_path/screenshot/" 2>/dev/null || true
 
-  echo -e "\e[33mDone with moving files. Please see result in respective folder for manual analysis: $scan_path/\e[0m"
+  echo -e "\e[33mDone with moving files. Please see result in respective folder for manual analysis: "$scan_path/" \e[0m"
 
   echo -e "\e[33mCleaning inititated\e[0m"
   find "$scan_path/" -maxdepth 1 -type f -name "*.txt" -print0 | xargs -0 rm
