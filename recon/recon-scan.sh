@@ -201,9 +201,19 @@ main() {
   initialize_api "httpx" "httpx"
   initialize_api "shodan" "shodan init"
 
+  echo -n "Enter GitHub token for Github subdomain enumeration: "
+  read -s github_token
+
   # Here we start the actual scan
   echo -e "\e[32mInitalization done. Starting the scan\e[0m"
   print_scanner_started
+
+  if [ -z "$github_token" ]; then
+    echo -e "\e[31mNo token provided. Skipping GitHub subdomain enumeration\e[0m"
+else
+    echo -e "\e[33mStarting enumerating subdomains using Github\e[0m"
+    github-subdomains -d swisscom.com -t "$github_token" -o "$scan_path/enumerated_subdomains_github.txt"
+fi
 
   echo -e "\e[33mStarting enumerating subdomains using CRT.sh\e[0m"
   curl -s "https://crt.sh?q=$target&output=json" | jq -r '.[].name_value' | awk -F '.' '{print $(NF-2)"."$(NF-1)"."$NF}' > "$scan_path/enumerated_subdomains_crt.txt"
@@ -227,7 +237,7 @@ main() {
 
   # Merge all the domains identified from all the tools
   echo -e "\e[33mMerging all the domains found from the tools\e[0m"
-  cat "$scan_path/enumerated_subdomains_crt.txt" "$scan_path/enumerated_subdomains_subfinder.txt" "$scan_path/enumerated_subdomains_all_amass.txt" "$scan_path/enumerated_subdomains_shodan.txt" "$scan_path/enumerated_subdomains_assetfinder" >"$scan_path/enumerated_merged_domains.txt"
+  cat "$scan_path/enumerated_subdomains_github.txt" "$scan_path/enumerated_subdomains_crt.txt" "$scan_path/enumerated_subdomains_subfinder.txt" "$scan_path/enumerated_subdomains_all_amass.txt" "$scan_path/enumerated_subdomains_shodan.txt" "$scan_path/enumerated_subdomains_assetfinder" >"$scan_path/enumerated_merged_domains.txt"
 
   # Fetch unique values and avoid duplicates when all domains are correctly fetched
   cat "$scan_path/enumerated_merged_domains.txt" | uniq >"$scan_path/enumerated_allsubdomains.txt"
